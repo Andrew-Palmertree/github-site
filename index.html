@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GitHub Logging Site</title>
+</head>
+<body>
+  <h1>Hello from GitHub Pages!</h1>
+
+  <script>
+  function sendLog(message) {
+    fetch('https://splunkproxy.andrewpalmertre.repl.co/log', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        source: 'github-site',
+        message: message,
+        time: new Date().toISOString()
+      })
+    }).then(res => {
+      if (!res.ok) console.error("Failed to send log");
+    });
+  }
+
+  sendLog("Page loaded: " + window.location.href);
+  </script>
+</body>
+</html>
