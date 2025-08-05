@@ -3,6 +3,11 @@ import json
 
 app = Flask(__name__)
 
+@app.route('/')
+def home():
+    return "<h1>Welcome to the GitHub Logger!</h1><p>Use the /log endpoint to POST logs.</p>", 200
+
+
 @app.route('/log', methods=['POST'])
 def log():
     data = request.json
