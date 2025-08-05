@@ -4,9 +4,12 @@ import os
 
 app = Flask(__name__)
 
+SPLUNK_HEC_URL=http://<your-splunk-host>:8088/services/collector
+SPLUNK_HEC_TOKEN=<your-Splunk-HEC-token>
+
 # Load environment variables for security (set these in Render or .env file locally)
-SPLUNK_HEC_URL = os.getenv('http://127.0.0.1:8088/services/collector')  # e.g., https://splunk-server:8088/services/collector/event
-SPLUNK_HEC_TOKEN = os.getenv('1c505bf2-ff11-4ed5-8814-c03d18b9aeb6')  # your HEC token
+SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # the name of the environment variable
+SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')  # the name of the environment variable
 
 @app.route('/')
 def home():
