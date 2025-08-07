@@ -4,9 +4,6 @@ import os
 
 app = Flask(__name__)
 
-SPLUNK_HEC_URL=http://127.0.0.1:8088/services/collector
-SPLUNK_HEC_TOKEN=<your-Splunk-HEC-token>
-
 SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')
 SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 
