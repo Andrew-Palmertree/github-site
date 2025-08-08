@@ -17,11 +17,11 @@ def send_log_to_splunk(source, message):
         return
 
     payload = {
-        "time": datetime.utcnow().timestamp(),
-        "host": "render-app",
-        "source": source,
-        "sourcetype": "_json",
-        "event": message if isinstance(message, dict) else str(message)
+    "time": datetime.utcnow().timestamp(),
+    "host": "render-app",
+    "source": source,
+    "sourcetype": "_json",
+    "event": str(message)
     }
 
     headers = {
