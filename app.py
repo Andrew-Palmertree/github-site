@@ -17,11 +17,11 @@ def send_log_to_splunk(source, message):
         return
 
     payload = {
-    "time": datetime.utcnow().timestamp(),
-    "host": "render-app",
-    "source": source,
-    "sourcetype": "_json",
-    "event": str(message)
+        "time": datetime.utcnow().timestamp(),
+        "host": "render-app",
+        "source": source,
+        "sourcetype": "_json",
+        "event": message if isinstance(message, str) else str(message)
     }
 
     headers = {
@@ -29,11 +29,17 @@ def send_log_to_splunk(source, message):
     }
 
     try:
-        response = requests.post(SPLUNK_HEC_URL, json=payload, headers=headers, verify=False)
+        response = requests.post(
+            SPLUNK_HEC_URL,
+            json=payload,
+            headers=headers,
+            verify=False  # remove verify=False if you set up certs
+        )
         if response.status_code != 200:
             print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
     except Exception as e:
         print(f"Error sending log to Splunk: {e}")
+
 
 
 @app.route("/", methods=["GET"])
