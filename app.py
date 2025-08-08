@@ -11,17 +11,25 @@ SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 
 
 def send_log_to_splunk(source, message):
-    """Helper to send log to Splunk HEC."""
     if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
         print("Splunk HEC URL or Token not configured.")
         return
+
+    # If message is string, wrap it in an object
+    if isinstance(message, str):
+        event_data = {"message": message}
+    elif isinstance(message, dict):
+        event_data = message
+    else:
+        # fallback to string conversion inside object
+        event_data = {"message": str(message)}
 
     payload = {
         "time": datetime.utcnow().timestamp(),
         "host": "render-app",
         "source": source,
         "sourcetype": "_json",
-        "event": message if isinstance(message, str) else str(message)
+        "event": event_data
     }
 
     headers = {
@@ -33,12 +41,13 @@ def send_log_to_splunk(source, message):
             SPLUNK_HEC_URL,
             json=payload,
             headers=headers,
-            verify=False  # remove verify=False if you set up certs
+            verify=False
         )
         if response.status_code != 200:
             print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
     except Exception as e:
         print(f"Error sending log to Splunk: {e}")
+
 
 
 
