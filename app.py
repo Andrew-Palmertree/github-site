@@ -17,7 +17,7 @@ def send_log_to_splunk(source, message):
         return
 
     payload = {
-        "event": message,  # Event should be a string
+        "event": str(message),  
         "sourcetype": "_json",
         "source": source,
         "time": datetime.utcnow().timestamp()
