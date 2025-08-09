@@ -29,7 +29,7 @@ def send_log_to_splunk(source, message):
         "host": "render-app",
         "source": source,
         "sourcetype": "_json",
-        "event": event_data
+        "event": "Test log message from Render app"
     }
 
     headers = {
