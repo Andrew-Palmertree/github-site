@@ -19,7 +19,7 @@ def send_log_to_splunk(source, message):
         "source": source,
         "sourcetype": "_json",
         "event": {
-            "message": Splunk Log Message
+            "message": messaage
         }
     }
 
