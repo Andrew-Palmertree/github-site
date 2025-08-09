@@ -29,11 +29,12 @@ def send_log_to_splunk(source, message):
         "host": "render-app",
         "source": source,
         "sourcetype": "_json",
-        "event": "Test log message from Render app"
+        "event": event_data
     }
 
     headers = {
-        "Authorization": f"Splunk {SPLUNK_HEC_TOKEN}"
+        "Authorization": f"Splunk {SPLUNK_HEC_TOKEN}",
+        "Content-Type": "application/json"
     }
 
     try:
