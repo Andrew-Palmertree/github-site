@@ -1,3 +1,11 @@
-flask
+# Web framework
+Flask
+
+# HTTP requests to Splunk HEC
 requests
+
+# For working with environment variables (optional, but common in Flask apps)
+python-dotenv
+
+# For running in production (optional but recommended for deployment)
 gunicorn
