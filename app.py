@@ -4,9 +4,6 @@ import os
 import uuid
 import urllib3
 
-# === Suppress InsecureRequestWarning if using self-signed certs ===
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 app = Flask(__name__)
 
 SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  
