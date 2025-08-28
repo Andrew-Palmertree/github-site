@@ -2,27 +2,30 @@ from flask import Flask, request, jsonify
 import requests
 import os
 import uuid
+import urllib3
+
+# === Suppress InsecureRequestWarning if using self-signed certs ===
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
-SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # e.g. http://localhost:8088/services/collector/event
+SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  
 SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
-
+SPLUNK_CA_CERT = os.getenv('SPLUNK_CA_CERT')
 
 def send_log_to_splunk(source, message):
     if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
         print("Splunk HEC URL or Token not configured.")
         return
 
-    channel = str(uuid.uuid4())  # generate unique channel ID
+    channel = str(uuid.uuid4())  # generates unique channel ID
 
     payload = {
         "host": "render-app",
         "source": source,
         "sourcetype": "_json",
-        "event": {
-            "message": message
-        }
+        "event": {"message": message}
+        "ackMode": "true"  # request ackId from Splunk
     }
 
     headers = {
@@ -37,7 +40,7 @@ def send_log_to_splunk(source, message):
             SPLUNK_HEC_URL,
             json=payload,
             headers=headers,
-            verify=False
+            verify=SPLUNK_CA_CERT if SPLUNK_CA_CERT else False
         )
         if response.status_code != 200:
             print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
@@ -63,7 +66,7 @@ def send_log_to_splunk(source, message):
             ack_url,
             json=ack_body,
             headers=ack_headers,
-            verify=False
+            verify=SPLUNK_CA_CERT if SPLUNK_CA_CERT else False
         )
         if ack_response.status_code != 200:
             print(f"Failed to send ack to Splunk: {ack_response.status_code} - {ack_response.text}")
@@ -95,4 +98,6 @@ def health():
 
 
 if __name__ == '__main__':
+    ssl_cert = os.getenv("FLASK_CERT", "cert.pem")
+    ssl_key = os.getenv("FLASK_KEY", "key.pem")
     app.run(host='0.0.0.0', port=10000)
