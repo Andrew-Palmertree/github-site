@@ -100,4 +100,4 @@ def health():
 if __name__ == '__main__':
     ssl_cert = os.getenv("FLASK_CERT", "cert.pem")
     ssl_key = os.getenv("FLASK_KEY", "key.pem")
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', port=10000, ssl_context=(ssl_cert, ssl_key))
