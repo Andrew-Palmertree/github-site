@@ -1,11 +1,14 @@
 # Web framework
-Flask
+Flask>=2.3.0
 
 # HTTP requests to Splunk HEC
-requests
+requests>=2.32.0
 
-# For working with environment variables (optional, but common in Flask apps)
-python-dotenv
+# For working with environment variables
+python-dotenv>=1.0.0
 
-# For running in production (optional but recommended for deployment)
-gunicorn
+# For running in production (recommended for deployment)
+gunicorn>=21.2.0
+
+# Optional: handle warnings for self-signed SSL (used in app.py)
+urllib3>=2.0.0
