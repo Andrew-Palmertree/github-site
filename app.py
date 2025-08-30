@@ -2,11 +2,26 @@ from flask import Flask, request, jsonify
 import requests
 import os
 import uuid
+import base64
 
 app = Flask(__name__)
 
-SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # e.g. http://localhost:8088/services/collector/event
+SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # e.g. https://localhost:8088/services/collector/event
 SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
+
+# SSL CERT & KEY from environment variables
+SPLUNK_CERT_B64 = os.getenv("SPLUNK_CERT_B64")
+SPLUNK_KEY_B64 = os.getenv("SPLUNK_KEY_B64")
+
+CERT_FILE = "cert.pem"
+KEY_FILE = "key.pem"
+
+# Decode cert and key to files if provided
+if SPLUNK_CERT_B64 and SPLUNK_KEY_B64:
+    with open(CERT_FILE, "wb") as cert_file:
+        cert_file.write(base64.b64decode(SPLUNK_CERT_B64))
+    with open(KEY_FILE, "wb") as key_file:
+        key_file.write(base64.b64decode(SPLUNK_KEY_B64))
 
 
 def send_log_to_splunk(source, message):
@@ -37,7 +52,8 @@ def send_log_to_splunk(source, message):
             SPLUNK_HEC_URL,
             json=payload,
             headers=headers,
-            verify=False
+            verify=True,  # Enable SSL verification
+            cert=(CERT_FILE, KEY_FILE)
         )
         if response.status_code != 200:
             print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
@@ -63,7 +79,8 @@ def send_log_to_splunk(source, message):
             ack_url,
             json=ack_body,
             headers=ack_headers,
-            verify=False
+            verify=True,
+            cert=(CERT_FILE, KEY_FILE)
         )
         if ack_response.status_code != 200:
             print(f"Failed to send ack to Splunk: {ack_response.status_code} - {ack_response.text}")
@@ -95,4 +112,5 @@ def health():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+    # Enable HTTPS for Flask using decoded certs
+    app.run(host='0.0.0.0', port=10000, ssl_context=(CERT_FILE, KEY_FILE))
