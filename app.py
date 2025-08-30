@@ -10,8 +10,8 @@ SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # e.g. https://localhost:8088/serv
 SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 
 # SSL CERT & KEY from environment variables
-SPLUNK_CERT_B64 = os.getenv("SPLUNK_CERT_B64")
-SPLUNK_KEY_B64 = os.getenv("SPLUNK_KEY_B64")
+SPLUNK_CERT = os.getenv("SPLUNK_CERT_B64")
+SPLUNK_KEY = os.getenv("SPLUNK_KEY_B64")
 
 CERT_FILE = "cert.pem"
 KEY_FILE = "key.pem"
