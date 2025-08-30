@@ -16,12 +16,11 @@ SPLUNK_KEY_B64 = os.getenv("SPLUNK_KEY_B64")
 CERT_FILE = "cert.pem"
 KEY_FILE = "key.pem"
 
-# Decode cert and key to files if provided
-if SPLUNK_CERT_B64 and SPLUNK_KEY_B64:
-    with open(CERT_FILE, "wb") as cert_file:
-        cert_file.write(base64.b64decode(SPLUNK_CERT_B64))
-    with open(KEY_FILE, "wb") as key_file:
-        key_file.write(base64.b64decode(SPLUNK_KEY_B64))
+if SPLUNK_CERT and SPLUNK_KEY:
+    with open(CERT_FILE, "w") as cert_file:
+        cert_file.write(SPLUNK_CERT)
+    with open(KEY_FILE, "w") as key_file:
+        key_file.write(SPLUNK_KEY)
 
 
 def send_log_to_splunk(source, message):
