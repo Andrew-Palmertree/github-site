@@ -1,78 +1,67 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import requests
 import os
 import uuid
 
 app = Flask(__name__)
 
-SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # e.g. https://splunk.company.com:8088/services/collector/event
+# Load Splunk HEC settings from environment variables
+SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # e.g. http://localhost:8088/services/collector/event
 SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 
-
-def send_log_to_splunk(source, message):
-    if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
+@@ -14,6 +14,8 @@ def send_log_to_splunk(source, message):
         print("Splunk HEC URL or Token not configured.")
-        return False
+        return
 
-    channel = str(uuid.uuid4())
+    channel = str(uuid.uuid4())  # generate unique channel ID
 
     payload = {
         "host": "render-app",
         "source": source,
-        "sourcetype": "_json",
-        "event": {
-            "message": message
-        }
-    }
+@@ -25,10 +27,12 @@ def send_log_to_splunk(source, message):
 
     headers = {
         "Authorization": f"Splunk {SPLUNK_HEC_TOKEN}",
+        "Content-Type": "application/json"
         "Content-Type": "application/json",
         "X-Splunk-Request-Channel": channel
     }
 
     try:
+        # Send event
         response = requests.post(
             SPLUNK_HEC_URL,
             json=payload,
-            headers=headers,
-            verify=False
+@@ -37,6 +41,33 @@ def send_log_to_splunk(source, message):
         )
-
         if response.status_code != 200:
             print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
-            return False
+            return
 
-        return True
+        # Parse ackId from response
+        response_json = response.json()
+        ack_id = response_json.get("ackId")
+        if not ack_id:
+            print("No ackId in response from Splunk")
+            return
+
+        # Send acknowledgment POST
+        ack_url = SPLUNK_HEC_URL.replace("/event", "/ack") + f"?channel={channel}"
+        ack_body = {
+            "acks": [ack_id]
+        }
+        ack_headers = {
+            "Authorization": f"Splunk {SPLUNK_HEC_TOKEN}",
+            "Content-Type": "application/json"
+        }
+        ack_response = requests.post(
+            ack_url,
+            json=ack_body,
+            headers=ack_headers,
+            verify=False
+        )
+        if ack_response.status_code != 200:
+            print(f"Failed to send ack to Splunk: {ack_response.status_code} - {ack_response.text}")
 
     except Exception as e:
         print(f"Error sending log to Splunk: {e}")
-        return False
-
-
-@app.route("/home", methods=["GET"])
-def home():
-    return render_template("home.html", name="Andrew Palmertree")
-
-
-@app.route("/log", methods=["POST"])
-def log():
-    data = request.get_json()
-    if not data or "message" not in data:
-        return jsonify({"error": "Message is required"}), 400
-
-    success = send_log_to_splunk("web-app", data["message"])
-
-    if success:
-        return jsonify({"status": "success"}), 200
-    else:
-        return jsonify({"status": "error"}), 500
-
-
-@app.route("/health", methods=["GET"])
-def health():
-    return "OK", 200
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
