@@ -77,6 +77,10 @@ def index():
     send_log_to_splunk("render-app", f"Homepage visited from {request.remote_addr}")
     return "Hello from Render logging app!"
 
+@app.route("/home", methods=["GET"])
+def home():
+    send_log_to_splunk("render-app", "Home page request")
+    return render_template("home.html", name="Andrew Palmertree")
 
 @app.route("/log", methods=["POST"])
 def log():
