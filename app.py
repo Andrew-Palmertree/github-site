@@ -5,11 +5,12 @@ import uuid
 
 app = Flask(__name__)
 
-# Load Splunk HEC settings from environment variables
 SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # e.g. http://localhost:8088/services/collector/event
 SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 
-@@ -14,6 +14,8 @@ def send_log_to_splunk(source, message):
+
+def send_log_to_splunk(source, message):
+    if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
         print("Splunk HEC URL or Token not configured.")
         return
 
@@ -18,11 +19,14 @@ SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
     payload = {
         "host": "render-app",
         "source": source,
-@@ -25,10 +27,12 @@ def send_log_to_splunk(source, message):
+        "sourcetype": "_json",
+        "event": {
+            "message": message
+        }
+    }
 
     headers = {
         "Authorization": f"Splunk {SPLUNK_HEC_TOKEN}",
-        "Content-Type": "application/json"
         "Content-Type": "application/json",
         "X-Splunk-Request-Channel": channel
     }
@@ -32,7 +36,8 @@ SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
         response = requests.post(
             SPLUNK_HEC_URL,
             json=payload,
-@@ -37,6 +41,33 @@ def send_log_to_splunk(source, message):
+            headers=headers,
+            verify=False
         )
         if response.status_code != 200:
             print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
@@ -65,3 +70,29 @@ SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 
     except Exception as e:
         print(f"Error sending log to Splunk: {e}")
+
+
+@app.route("/", methods=["GET"])
+def index():
+    send_log_to_splunk("render-app", f"Homepage visited from {request.remote_addr}")
+    return "Hello from Render logging app!"
+
+
+@app.route("/log", methods=["POST"])
+def log():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid JSON"}), 400
+
+    send_log_to_splunk("client", data)
+    return jsonify({"status": "success"}), 200
+
+
+@app.route("/health", methods=["GET"])
+def health():
+    send_log_to_splunk("render-app", "Health check endpoint hit")
+    return "OK", 200
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=10000)
