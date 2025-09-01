@@ -40,7 +40,10 @@
                 const response = await fetch("/log", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify( source: "home_message", message )
+                    body: JSON.stringify({
+                        source: "home_message",
+                        message: message         
+                    })
                 });
 
                 const result = await response.json();
