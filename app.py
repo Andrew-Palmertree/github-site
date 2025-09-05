@@ -7,7 +7,8 @@ app = Flask(__name__)
 
 SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # e.g. http://localhost:8088/services/collector/event
 SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
-
+DEPLOY_HOOK = os.getenv('DEPLOY_HOOK')
+DEPLOY_URL = os.getenv('DEPLOY_URL')
 
 def send_log_to_splunk(source, message):
     if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
@@ -103,7 +104,21 @@ def log():
 def health():
     send_log_to_splunk("render-app", "Health check endpoint hit")
     return "OK", 200
-
+    
+@app.route(DEPLOY_URL, methods=["POST"])
+def redeploy():
+    try:
+        response = requests.post(DEPLOY_HOOK)
+        if response.status_code == 200:
+            return jsonify({"status": "success", "message": "Redeployment triggered successfully"})
+        else:
+            return jsonify({
+                "status": "error",
+                "message": f"Failed to trigger redeploy. Status: {response.status_code}",
+                "response": response.text
+            }), 500
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
