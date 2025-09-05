@@ -104,6 +104,31 @@ def log():
 def health():
     send_log_to_splunk("render-app", "Health check endpoint hit")
     return "OK", 200
+
+@app.route("/test-redeploy", methods=["GET"])
+def test_redeploy():
+    if not DEPLOY_HOOK:
+        return jsonify({"status": "error", "message": "DEPLOY_HOOK is not configured"}), 500
+
+    try:
+        # Use GET to check if the deploy hook endpoint is reachable
+        response = requests.get(DEPLOY_HOOK, timeout=5)
+
+        if response.status_code == 200:
+            return jsonify({
+                "status": "success",
+                "message": "Deploy hook is reachable ✅"
+            }), 200
+        else:
+            return jsonify({
+                "status": "warning",
+                "message": f"Deploy hook responded, but not OK. Status: {response.status_code}",
+                "response": response.text
+            }), 200
+
+    except requests.exceptions.RequestException as e:
+        return jsonify({"status": "error", "message": f"Deploy hook is unreachable ❌: {str(e)}"}), 500
+
     
 @app.route(DEPLOY_URL, methods=["POST"])
 def redeploy():
