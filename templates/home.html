@@ -33,6 +33,7 @@
             if (!message) {
                 statusEl.innerText = "Please enter a message.";
                 statusEl.style.color = "red";
+                clearStatusAfterDelay(statusEl);
                 return;
             }
 
@@ -42,7 +43,7 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         source: "home_message",
-                        message: message         
+                        message: message
                     })
                 });
 
@@ -55,10 +56,20 @@
                     statusEl.innerText = "Failed to send message ❌";
                     statusEl.style.color = "red";
                 }
+
+                clearStatusAfterDelay(statusEl);
+
             } catch (error) {
                 statusEl.innerText = "Error connecting to server ❌";
                 statusEl.style.color = "red";
+                clearStatusAfterDelay(statusEl);
             }
+        }
+
+        function clearStatusAfterDelay(element) {
+            setTimeout(() => {
+                element.innerText = "";
+            }, 15000);
         }
     </script>
 </body>
