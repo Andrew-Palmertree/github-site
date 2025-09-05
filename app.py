@@ -85,11 +85,18 @@ def home():
 @app.route("/log", methods=["POST"])
 def log():
     data = request.get_json()
-    if not data:
+
+    if not data or "message" not in data:
         return jsonify({"error": "Invalid JSON"}), 400
 
-    send_log_to_splunk("client", data)
+    source = data.get("source", "client")
+    message = data["message"]
+
+    # Pass clean values to Splunk
+    send_log_to_splunk(source, message)
+
     return jsonify({"status": "success"}), 200
+
 
 
 @app.route("/health", methods=["GET"])
