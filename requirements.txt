@@ -7,11 +7,19 @@ requests
 # For working with environment variables
 python-dotenv
 
-# For running in production
+# For running in production (WSGI server)
 gunicorn
 
-# Profanity filter
+# Profanity filtering (rule-based)
+better-profanity
+
+# Profanity detection (ML-based)
 profanity-check
+
+# Machine learning dependencies for profanity-check
+scikit-learn
+joblib
+numpy
 
 # Ensures pkg_resources exists
 setuptools
