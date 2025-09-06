@@ -19,6 +19,6 @@ setuptools
 wheel
 
 # Compatible numpy & scikit-learn versions
-numpy==1.21.6
-scikit-learn==1.0.2
-joblib>=1.1.0
+numpy
+scikit-learn
+joblib
