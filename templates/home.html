@@ -53,7 +53,7 @@
                     statusEl.innerText = "Message sent to Splunk ✅";
                     statusEl.style.color = "limegreen";
                 } else {
-                    statusEl.innerText = "Failed to send message ❌";
+                    statusEl.innerText = result.message || "Failed to send message ❌";
                     statusEl.style.color = "red";
                 }
 
