@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, render_template
 import requests
 import os
@@ -8,10 +7,11 @@ from profanity_check import predict
 
 app = Flask(__name__)
 
-# Load better-profanity word list
+# Initialize better-profanity
 profanity.load_censor_words()
 
-SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')  # Splunk HEC URL
+# Environment variables
+SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')
 SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 DEPLOY_HOOK = os.getenv('DEPLOY_HOOK')
 DEPLOY_URL = os.getenv('DEPLOY_URL')
@@ -22,7 +22,7 @@ def send_log_to_splunk(source, message):
         print("Splunk HEC URL or Token not configured.")
         return
 
-    channel = str(uuid.uuid4())  # Unique channel ID
+    channel = str(uuid.uuid4())
 
     payload = {
         "host": "render-app",
@@ -102,15 +102,16 @@ def log():
     message = data["message"]
 
     try:
-        # First layer: better-profanity (fast)
+        # First layer: better-profanity (fast check)
         if profanity.contains_profanity(message):
             return jsonify({
                 "status": "error",
                 "message": "Your message contains inappropriate language."
             }), 400
 
-        # Second layer: profanity-check (AI-based)
-        if predict([message])[0] == 1:
+        # Second layer: profanity-check (ML-based)
+        ml_flag = predict([message])[0]
+        if ml_flag == 1:
             return jsonify({
                 "status": "error",
                 "message": "Your message was flagged by our AI profanity filter."
