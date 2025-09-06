@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 import requests
 import os
 import uuid
+from profanity_check import predict
 
 app = Flask(__name__)
 
@@ -33,7 +34,6 @@ def send_log_to_splunk(source, message):
     }
 
     try:
-        # Send event
         response = requests.post(
             SPLUNK_HEC_URL,
             json=payload,
@@ -44,18 +44,14 @@ def send_log_to_splunk(source, message):
             print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
             return
 
-        # Parse ackId from response
         response_json = response.json()
         ack_id = response_json.get("ackId")
         if not ack_id:
             print("No ackId in response from Splunk")
             return
 
-        # Send acknowledgment POST
         ack_url = SPLUNK_HEC_URL.replace("/event", "/ack") + f"?channel={channel}"
-        ack_body = {
-            "acks": [ack_id]
-        }
+        ack_body = {"acks": [ack_id]}
         ack_headers = {
             "Authorization": f"Splunk {SPLUNK_HEC_TOKEN}",
             "Content-Type": "application/json"
@@ -93,11 +89,20 @@ def log():
     source = data.get("source", "client")
     message = data["message"]
 
-    # Pass clean values to Splunk
+    # Profanity detection using AI model
+    try:
+        if predict([message])[0] == 1:
+            return jsonify({
+                "status": "error",
+                "message": "Message contains inappropriate language and was blocked."
+            }), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Profanity check failed: {e}"}), 500
+
+    # Safe message → send to Splunk
     send_log_to_splunk(source, message)
 
     return jsonify({"status": "success"}), 200
-
 
 
 @app.route("/health", methods=["GET"])
@@ -111,7 +116,6 @@ def test_redeploy():
         return jsonify({"status": "error", "message": "DEPLOY_HOOK is not configured"}), 500
 
     try:
-        # Use GET to check if the deploy hook endpoint is reachable
         response = requests.get(DEPLOY_HOOK, timeout=5)
 
         if response.status_code == 200:
@@ -129,7 +133,7 @@ def test_redeploy():
     except requests.exceptions.RequestException as e:
         return jsonify({"status": "error", "message": f"Deploy hook is unreachable ❌: {str(e)}"}), 500
 
-    
+
 @app.route(DEPLOY_URL, methods=["POST"])
 def redeploy():
     try:
@@ -144,6 +148,7 @@ def redeploy():
             }), 500
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
