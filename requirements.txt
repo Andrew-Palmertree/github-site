@@ -10,21 +10,9 @@ python-dotenv
 # For running in production
 gunicorn
 
-# Profanity filtering (rule-based)
+# Profanity filtering (rule-based, works on Python 3.13)
 better-profanity
 
-# Install NumPy FIRST to avoid metadata-generation errors
-numpy==1.21.6
-
-# Profanity detection (ML-based)
-profanity-check==1.0.3
-
-# Compatible scikit-learn version for profanity-check
-scikit-learn==0.21.3
-
-# Separate joblib install for compatibility
-joblib==1.3.2
-
-# Ensures pkg_resources exists and avoids new breaking changes
-setuptools<81
+# Compatibility fixes
+setuptools
 wheel
