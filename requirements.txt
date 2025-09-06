@@ -1,14 +1,18 @@
 # Web framework
 Flask
 
-# HTTP requests to Splunk HEC
+# HTTP requests
 requests
 
-# For environment variables
+# For working with environment variables
 python-dotenv
 
 # For running in production
 gunicorn
 
-# AI-powered profanity detection
+# Profanity filter
 profanity-check
+
+# Ensures pkg_resources exists
+setuptools
+wheel
