@@ -1,9 +1,10 @@
+
 from flask import Flask, request, jsonify, render_template
 import requests
 import os
 import uuid
 from better_profanity import profanity
-
+from profanity_check import predict
 
 app = Flask(__name__)
 
@@ -95,22 +96,36 @@ def log():
     data = request.get_json()
 
     if not data or "message" not in data:
-        return jsonify({"error": "Invalid JSON"}), 400
+        return jsonify({"status": "error", "message": "Invalid JSON"}), 400
 
     source = data.get("source", "client")
     message = data["message"]
 
-    # Rule-based profanity filter
-    if profanity.contains_profanity(message):
+    try:
+        # First layer: better-profanity (fast)
+        if profanity.contains_profanity(message):
+            return jsonify({
+                "status": "error",
+                "message": "Your message contains inappropriate language."
+            }), 400
+
+        # Second layer: profanity-check (AI-based)
+        if predict([message])[0] == 1:
+            return jsonify({
+                "status": "error",
+                "message": "Your message was flagged by our AI profanity filter."
+            }), 400
+
+    except Exception as e:
         return jsonify({
             "status": "error",
-            "message": "Message contains inappropriate language and was blocked."
-        }), 400
+            "message": f"Profanity check failed: {e}"
+        }), 500
 
+    # Safe message → send to Splunk
     send_log_to_splunk(source, message)
 
     return jsonify({"status": "success"}), 200
-
 
 
 @app.route("/health", methods=["GET"])
