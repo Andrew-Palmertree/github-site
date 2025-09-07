@@ -3,12 +3,14 @@ import requests
 import os
 import uuid
 from better_profanity import profanity
-from cleantext import clean
+from profanity_checker import ProfanityChecker
 
+# Initialize Flask
 app = Flask(__name__)
 
-# Initialize better-profanity
+# Initialize profanity filters
 profanity.load_censor_words()
+checker = ProfanityChecker()
 
 # Environment variables
 SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')
@@ -16,40 +18,13 @@ SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 DEPLOY_HOOK = os.getenv('DEPLOY_HOOK')
 DEPLOY_URL = os.getenv('DEPLOY_URL')
 
-# -------------------------------
-# Helper Functions
-# -------------------------------
-
-def normalize_text(text):
-    """
-    Normalize text to handle tricky obfuscations like f@ck, sh!t, etc.
-    """
-    return clean(
-        text,
-        lower=True,
-        no_punct=True,
-        replace_with_punct="",
-        replace_with_email="",
-        replace_with_url=""
-    )
-
-def contains_profanity(text):
-    """
-    Check if a message contains profanity after normalization.
-    """
-    normalized = normalize_text(text)
-    return profanity.contains_profanity(normalized)
-
 def send_log_to_splunk(source, message):
-    """
-    Send logs to Splunk via HTTP Event Collector (HEC).
-    """
+    """Send clean messages to Splunk"""
     if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
         print("Splunk HEC URL or Token not configured.")
         return
 
     channel = str(uuid.uuid4())
-
     payload = {
         "host": "render-app",
         "source": source,
@@ -58,7 +33,6 @@ def send_log_to_splunk(source, message):
             "message": message
         }
     }
-
     headers = {
         "Authorization": f"Splunk {SPLUNK_HEC_TOKEN}",
         "Content-Type": "application/json",
@@ -72,41 +46,25 @@ def send_log_to_splunk(source, message):
             headers=headers,
             verify=False
         )
-
         if response.status_code != 200:
             print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
-            return
-
-        response_json = response.json()
-        ack_id = response_json.get("ackId")
-
-        if not ack_id:
-            print("No ackId in response from Splunk")
-            return
-
-        ack_url = SPLUNK_HEC_URL.replace("/event", "/ack") + f"?channel={channel}"
-        ack_body = {"acks": [ack_id]}
-        ack_headers = {
-            "Authorization": f"Splunk {SPLUNK_HEC_TOKEN}",
-            "Content-Type": "application/json"
-        }
-
-        ack_response = requests.post(
-            ack_url,
-            json=ack_body,
-            headers=ack_headers,
-            verify=False
-        )
-
-        if ack_response.status_code != 200:
-            print(f"Failed to send ack to Splunk: {ack_response.status_code} - {ack_response.text}")
-
     except Exception as e:
         print(f"Error sending log to Splunk: {e}")
 
-# -------------------------------
-# Routes
-# -------------------------------
+def contains_profanity(message):
+    """
+    Use both better-profanity and profanity-checker
+    for accurate detection, including tricky cases.
+    """
+    # First layer: better-profanity
+    if profanity.contains_profanity(message):
+        return True
+
+    # Second layer: profanity-checker (catches f@ck, f.u.c.k, f you, etc.)
+    if checker.is_profane(message):
+        return True
+
+    return False
 
 @app.route("/", methods=["GET"])
 def index():
@@ -129,7 +87,7 @@ def log():
     message = data["message"]
 
     try:
-        # Profanity check
+        # Use hybrid profanity detection
         if contains_profanity(message):
             return jsonify({
                 "status": "error",
@@ -144,7 +102,6 @@ def log():
 
     # Safe message → send to Splunk
     send_log_to_splunk(source, message)
-
     return jsonify({"status": "success"}), 200
 
 @app.route("/health", methods=["GET"])
@@ -159,7 +116,6 @@ def test_redeploy():
 
     try:
         response = requests.get(DEPLOY_HOOK, timeout=5)
-
         if response.status_code == 200:
             return jsonify({
                 "status": "success",
@@ -171,7 +127,6 @@ def test_redeploy():
                 "message": f"Deploy hook responded, but not OK. Status: {response.status_code}",
                 "response": response.text
             }), 200
-
     except requests.exceptions.RequestException as e:
         return jsonify({
             "status": "error",
@@ -192,10 +147,6 @@ def redeploy():
             }), 500
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
-# -------------------------------
-# Main
-# -------------------------------
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
