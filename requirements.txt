@@ -1,15 +1,20 @@
+
+# Web framework
 Flask
+
+# HTTP requests
 requests
+
+# Environment variables
 python-dotenv
+
+# Deployment
 gunicorn
 
-# Profanity detection
+# Profanity filtering
 better-profanity
-profanity-filter
-detoxify
+profanity-checker
 
-# Utilities
+# Utils
 setuptools
 wheel
-torch==2.5.1
-transformers==4.44.2
