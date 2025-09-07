@@ -1,20 +1,19 @@
-
 # Web framework
-Flask
+Flask==3.1.2
 
 # HTTP requests
-requests
+requests==2.32.3
 
-# Environment variables
-python-dotenv
+# For working with environment variables
+python-dotenv==1.0.1
 
-# Deployment
-gunicorn
+# For running in production
+gunicorn==23.0.0
 
-# Profanity filtering
-better-profanity
-profanity-checker
+# Profanity detection (lightweight + Render-compatible)
+better-profanity==0.7.0
+clean-text==0.6.0
 
-# Utils
-setuptools
-wheel
+# Utilities to avoid build errors on Render
+setuptools>=75.0.0
+wheel>=0.45.0
