@@ -4,16 +4,16 @@ Flask
 # HTTP requests
 requests
 
-# For working with environment variables
+# Environment variables
 python-dotenv
 
-# For running in production
+# Deployment
 gunicorn
 
-# Profanity filter (modern & lightweight)
+# Profanity filtering
 better-profanity
-clean-text
+profanity-checker
 
-# Ensures pkg_resources exists
+# Utils
 setuptools
 wheel
