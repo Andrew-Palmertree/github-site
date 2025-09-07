@@ -10,15 +10,10 @@ python-dotenv
 # For running in production
 gunicorn
 
-# Profanity filters
+# Profanity filter (modern & lightweight)
 better-profanity
-profanity-check
+clean-text
 
 # Ensures pkg_resources exists
 setuptools
 wheel
-
-# Compatible numpy & scikit-learn versions
-numpy
-scikit-learn
-joblib
