@@ -2,15 +2,21 @@ from flask import Flask, request, jsonify, render_template
 import requests
 import os
 import uuid
+import re
 from better_profanity import profanity
-from profanity_checker import ProfanityChecker
+from profanity_filter import ProfanityFilter
+from detoxify import Detoxify  # AI-based profanity detection
 
-# Initialize Flask
 app = Flask(__name__)
 
-# Initialize profanity filters
+# Load better-profanity
 profanity.load_censor_words()
-checker = ProfanityChecker()
+
+# Initialize profanity-filter
+pf = ProfanityFilter()
+
+# Initialize AI model (Detoxify)
+detox_model = Detoxify('original')
 
 # Environment variables
 SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')
@@ -18,68 +24,67 @@ SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 DEPLOY_HOOK = os.getenv('DEPLOY_HOOK')
 DEPLOY_URL = os.getenv('DEPLOY_URL')
 
-def send_log_to_splunk(source, message):
-    """Send clean messages to Splunk"""
-    if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
-        print("Splunk HEC URL or Token not configured.")
-        return
 
+def send_log_to_splunk(source, message):
+    if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
+        return
     channel = str(uuid.uuid4())
     payload = {
         "host": "render-app",
         "source": source,
         "sourcetype": "_json",
-        "event": {
-            "message": message
-        }
+        "event": {"message": message}
     }
     headers = {
         "Authorization": f"Splunk {SPLUNK_HEC_TOKEN}",
         "Content-Type": "application/json",
         "X-Splunk-Request-Channel": channel
     }
-
     try:
-        response = requests.post(
-            SPLUNK_HEC_URL,
-            json=payload,
-            headers=headers,
-            verify=False
-        )
-        if response.status_code != 200:
-            print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
+        requests.post(SPLUNK_HEC_URL, json=payload, headers=headers, verify=False)
     except Exception as e:
-        print(f"Error sending log to Splunk: {e}")
+        print(f"Error sending log: {e}")
 
-def contains_profanity(message):
+
+def contains_profanity_ai(message):
     """
-    Use both better-profanity and profanity-checker
-    for accurate detection, including tricky cases.
+    Hybrid profanity detection:
+    1. better-profanity → simple blacklist
+    2. profanity-filter → fuzzy matches
+    3. Detoxify → AI contextual detection
+    4. Custom regex → obfuscated tricks
     """
-    # First layer: better-profanity
+    # Fast blacklist
     if profanity.contains_profanity(message):
         return True
 
-    # Second layer: profanity-checker (catches f@ck, f.u.c.k, f you, etc.)
-    if checker.is_profane(message):
+    # Fuzzy filtering
+    if pf.is_profane(message):
         return True
+
+    # AI contextual detection
+    scores = detox_model.predict(message)
+    if scores.get("toxicity", 0) > 0.7:
+        return True
+
+    # Regex for obfuscations
+    tricky_patterns = [
+        r"f[\W_]*u[\W_]*c[\W_]*k",
+        r"f[\W_]*u[\W_]+",
+        r"sh[\W_]*i[\W_]*t",
+        r"b[\W_]*i[\W_]*t[\W_]*ch",
+        r"a[\W_]*s[\W_]*s[\W_]*hole"
+    ]
+    for pattern in tricky_patterns:
+        if re.search(pattern, message, re.IGNORECASE):
+            return True
 
     return False
 
-@app.route("/", methods=["GET"])
-def index():
-    send_log_to_splunk("render-app", f"Homepage visited from {request.remote_addr}")
-    return "Hello from Render logging app!"
-
-@app.route("/home", methods=["GET"])
-def home():
-    send_log_to_splunk("render-app", "Home page request")
-    return render_template("home.html", name="Andrew Palmertree")
 
 @app.route("/log", methods=["POST"])
 def log():
     data = request.get_json()
-
     if not data or "message" not in data:
         return jsonify({"status": "error", "message": "Invalid JSON"}), 400
 
@@ -87,66 +92,13 @@ def log():
     message = data["message"]
 
     try:
-        # Use hybrid profanity detection
-        if contains_profanity(message):
+        if contains_profanity_ai(message):
             return jsonify({
                 "status": "error",
                 "message": "Your message contains inappropriate language."
             }), 400
-
     except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": f"Profanity check failed: {e}"
-        }), 500
+        return jsonify({"status": "error", "message": f"Profanity check failed: {e}"}), 500
 
-    # Safe message → send to Splunk
     send_log_to_splunk(source, message)
     return jsonify({"status": "success"}), 200
-
-@app.route("/health", methods=["GET"])
-def health():
-    send_log_to_splunk("render-app", "Health check endpoint hit")
-    return "OK", 200
-
-@app.route("/test-redeploy", methods=["GET"])
-def test_redeploy():
-    if not DEPLOY_HOOK:
-        return jsonify({"status": "error", "message": "DEPLOY_HOOK is not configured"}), 500
-
-    try:
-        response = requests.get(DEPLOY_HOOK, timeout=5)
-        if response.status_code == 200:
-            return jsonify({
-                "status": "success",
-                "message": "Deploy hook is reachable ✅"
-            }), 200
-        else:
-            return jsonify({
-                "status": "warning",
-                "message": f"Deploy hook responded, but not OK. Status: {response.status_code}",
-                "response": response.text
-            }), 200
-    except requests.exceptions.RequestException as e:
-        return jsonify({
-            "status": "error",
-            "message": f"Deploy hook is unreachable ❌: {str(e)}"
-        }), 500
-
-@app.route(DEPLOY_URL, methods=["POST"])
-def redeploy():
-    try:
-        response = requests.post(DEPLOY_HOOK)
-        if response.status_code == 200:
-            return jsonify({"status": "success", "message": "Redeployment triggered successfully"})
-        else:
-            return jsonify({
-                "status": "error",
-                "message": f"Failed to trigger redeploy. Status: {response.status_code}",
-                "response": response.text
-            }), 500
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
