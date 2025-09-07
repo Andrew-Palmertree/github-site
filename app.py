@@ -3,7 +3,7 @@ import requests
 import os
 import uuid
 from better_profanity import profanity
-from profanity_check import predict
+from cleantext import clean
 
 app = Flask(__name__)
 
@@ -16,8 +16,34 @@ SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 DEPLOY_HOOK = os.getenv('DEPLOY_HOOK')
 DEPLOY_URL = os.getenv('DEPLOY_URL')
 
+# -------------------------------
+# Helper Functions
+# -------------------------------
+
+def normalize_text(text):
+    """
+    Normalize text to handle tricky obfuscations like f@ck, sh!t, etc.
+    """
+    return clean(
+        text,
+        lower=True,
+        no_punct=True,
+        replace_with_punct="",
+        replace_with_email="",
+        replace_with_url=""
+    )
+
+def contains_profanity(text):
+    """
+    Check if a message contains profanity after normalization.
+    """
+    normalized = normalize_text(text)
+    return profanity.contains_profanity(normalized)
 
 def send_log_to_splunk(source, message):
+    """
+    Send logs to Splunk via HTTP Event Collector (HEC).
+    """
     if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
         print("Splunk HEC URL or Token not configured.")
         return
@@ -78,18 +104,19 @@ def send_log_to_splunk(source, message):
     except Exception as e:
         print(f"Error sending log to Splunk: {e}")
 
+# -------------------------------
+# Routes
+# -------------------------------
 
 @app.route("/", methods=["GET"])
 def index():
     send_log_to_splunk("render-app", f"Homepage visited from {request.remote_addr}")
     return "Hello from Render logging app!"
 
-
 @app.route("/home", methods=["GET"])
 def home():
     send_log_to_splunk("render-app", "Home page request")
     return render_template("home.html", name="Andrew Palmertree")
-
 
 @app.route("/log", methods=["POST"])
 def log():
@@ -102,19 +129,11 @@ def log():
     message = data["message"]
 
     try:
-        # First layer: better-profanity (fast check)
-        if profanity.contains_profanity(message):
+        # Profanity check
+        if contains_profanity(message):
             return jsonify({
                 "status": "error",
                 "message": "Your message contains inappropriate language."
-            }), 400
-
-        # Second layer: profanity-check (ML-based)
-        ml_flag = predict([message])[0]
-        if ml_flag == 1:
-            return jsonify({
-                "status": "error",
-                "message": "Your message was flagged by our AI profanity filter."
             }), 400
 
     except Exception as e:
@@ -128,12 +147,10 @@ def log():
 
     return jsonify({"status": "success"}), 200
 
-
 @app.route("/health", methods=["GET"])
 def health():
     send_log_to_splunk("render-app", "Health check endpoint hit")
     return "OK", 200
-
 
 @app.route("/test-redeploy", methods=["GET"])
 def test_redeploy():
@@ -161,7 +178,6 @@ def test_redeploy():
             "message": f"Deploy hook is unreachable ❌: {str(e)}"
         }), 500
 
-
 @app.route(DEPLOY_URL, methods=["POST"])
 def redeploy():
     try:
@@ -177,6 +193,9 @@ def redeploy():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+# -------------------------------
+# Main
+# -------------------------------
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
