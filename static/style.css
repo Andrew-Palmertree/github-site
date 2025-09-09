@@ -55,15 +55,21 @@ header {
 
 /* Styling for Splunk Dashboard image */
 .dashboard-image {
-    max-width: 500px;          /* Limit image size */
-    width: 100%;               /* Make it responsive */
-    height: auto;              /* Maintain proportions */
+    max-width: 100%;           /* Keep it responsive */
+    width: 100%;               /* Take full width of container */
+    height: auto;              /* Maintain aspect ratio */
     display: block;
-    margin: 20px auto;         /* Center the image */
-    border: 2px solid #00ffea; /* Aqua border to match theme */
+    margin: 20px auto;         /* Center image */
+    border: 2px solid #00ffea; /* Aqua border */
     border-radius: 10px;       /* Rounded corners */
-    background-color: transparent; /* No background */
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); /* Soft glow */
+    background-color: transparent;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+
+    /* Cropping part */
+    object-fit: cover;         /* Ensures image fills cropped area */
+    object-position: left;     /* Align image to the left */
+    overflow: hidden;          /* Hides cropped part */
+    max-width: 900px;          /* Adjust cropped visible width */
 }
 
 input {
