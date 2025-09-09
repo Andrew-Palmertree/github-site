@@ -5,7 +5,7 @@ body {
     color: white;
     text-align: center;
     background-color: #0f172a;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 /* Cool animated gradient background */
@@ -32,6 +32,7 @@ header {
     justify-content: space-between;
     padding: 20px;
     font-size: 20px;
+    flex-wrap: wrap; /* Better on smaller screens */
 }
 
 .username {
@@ -40,54 +41,37 @@ header {
 }
 
 .container {
-    margin-top: 100px;
+    margin: 80px auto 30px auto;
     background: rgba(0, 0, 0, 0.6);
-    padding: 30px;
+    padding: 25px;
     border-radius: 15px;
     display: inline-block;
+    max-width: 700px;
+    width: 90%;
     box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
 }
 
 .logo {
-    width: 250px;
+    width: 220px;
+    max-width: 80%;
     margin-bottom: 20px;
-}
-
-/* Styling for Splunk Dashboard image */
-/* Wrapper controls how much of the image is visible */
-.dashboard-wrapper {
-    max-width: 1200px;         /* Make the displayed area bigger */
-    height: 600px;            /* Adjust this for cropping height */
-    margin: 20px auto;
-    overflow: hidden;         /* Crop anything outside the box */
-    border-radius: 10px;
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
-    border: 2px solid #00ffea;
-}
-
-/* Inside image is scaled and positioned */
-.dashboard-image {
-    width: 150%;              /* Make the image bigger */
-    height: auto;
-    display: block;
-    object-fit: cover;        /* Ensures it fills the container */
-    object-position: 20% top; /* Shift the image to the right for more cropping */
-    background-color: transparent;
 }
 
 input {
     padding: 10px;
-    width: 300px;
+    width: 80%;
+    max-width: 350px;
     font-size: 16px;
     border-radius: 8px;
     border: none;
     outline: none;
     margin-top: 10px;
+    box-sizing: border-box;
 }
 
 button {
     padding: 10px 20px;
-    margin-left: 10px;
+    margin-top: 10px;
     background-color: #00ffea;
     color: black;
     font-size: 16px;
@@ -96,6 +80,9 @@ button {
     border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 button:hover {
@@ -105,4 +92,82 @@ button:hover {
 #statusMessage {
     margin-top: 15px;
     font-weight: bold;
+}
+
+/* Dashboard wrapper for responsive cropping */
+.dashboard-wrapper {
+    max-width: 100%;
+    width: 90%;
+    height: auto;
+    margin: 20px auto;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+    border: 2px solid #00ffea;
+}
+
+/* Make dashboard image bigger but responsive */
+.dashboard-image {
+    width: 150%;
+    max-width: 150%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    object-position: 20% top; /* Crops more to the right */
+    background-color: transparent;
+    transition: all 0.3s ease-in-out;
+}
+
+/* ---------- MOBILE FIXES ---------- */
+@media screen and (max-width: 768px) {
+    header {
+        flex-direction: column;
+        text-align: center;
+        font-size: 18px;
+    }
+
+    .container {
+        margin-top: 60px;
+        width: 95%;
+        padding: 20px;
+    }
+
+    .dashboard-wrapper {
+        width: 95%;
+        height: auto;
+    }
+
+    .dashboard-image {
+        width: 100%;   /* Fit smaller screens */
+        max-width: 100%;
+        object-position: center top; /* Center focus for mobile */
+    }
+
+    input {
+        width: 90%;
+    }
+
+    button {
+        width: 90%;
+    }
+}
+
+/* For very small screens */
+@media screen and (max-width: 480px) {
+    h1 {
+        font-size: 20px;
+    }
+
+    h2, h3 {
+        font-size: 18px;
+    }
+
+    .logo {
+        width: 180px;
+    }
+
+    button {
+        font-size: 14px;
+        padding: 8px 15px;
+    }
 }
