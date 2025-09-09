@@ -54,22 +54,25 @@ header {
 }
 
 /* Styling for Splunk Dashboard image */
-.dashboard-image {
-    max-width: 100%;           /* Keep it responsive */
-    width: 100%;               /* Take full width of container */
-    height: auto;              /* Maintain aspect ratio */
-    display: block;
-    margin: 20px auto;         /* Center image */
-    border: 2px solid #00ffea; /* Aqua border */
-    border-radius: 10px;       /* Rounded corners */
-    background-color: transparent;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+/* Wrapper controls how much of the image is visible */
+.dashboard-wrapper {
+    max-width: 1200px;         /* Make the displayed area bigger */
+    height: 600px;            /* Adjust this for cropping height */
+    margin: 20px auto;
+    overflow: hidden;         /* Crop anything outside the box */
+    border-radius: 10px;
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+    border: 2px solid #00ffea;
+}
 
-    /* Cropping part */
-    object-fit: cover;         /* Ensures image fills cropped area */
-    object-position: left;     /* Align image to the left */
-    overflow: hidden;          /* Hides cropped part */
-    max-width: 900px;          /* Adjust cropped visible width */
+/* Inside image is scaled and positioned */
+.dashboard-image {
+    width: 150%;              /* Make the image bigger */
+    height: auto;
+    display: block;
+    object-fit: cover;        /* Ensures it fills the container */
+    object-position: 20% top; /* Shift the image to the right for more cropping */
+    background-color: transparent;
 }
 
 input {
