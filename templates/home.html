@@ -14,6 +14,7 @@
         <span class="username">{{ name }}</span>
     </header>
 
+    <!-- Logging Form Section -->
     <div class="container">
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Splunk_logo.svg/2560px-Splunk_logo.svg.png"
              alt="Splunk Logo" class="logo">
@@ -23,8 +24,10 @@
         <button onclick="sendMessage()">Send</button>
 
         <p id="statusMessage"></p>
+    </div>
 
-        <!-- Add Splunk Dashboard Image Here -->
+    <!-- Splunk Dashboard Image Section (separate) -->
+    <div class="dashboard-section">
         <h3>Splunk Dashboard</h3>
         <img src="{{ url_for('static', filename='images/splunk_logger_dashboard.png') }}" 
              alt="Splunk Dashboard" 
