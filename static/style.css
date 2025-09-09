@@ -53,6 +53,19 @@ header {
     margin-bottom: 20px;
 }
 
+/* Styling for Splunk Dashboard image */
+.dashboard-image {
+    max-width: 500px;          /* Limit image size */
+    width: 100%;               /* Make it responsive */
+    height: auto;              /* Maintain proportions */
+    display: block;
+    margin: 20px auto;         /* Center the image */
+    border: 2px solid #00ffea; /* Aqua border to match theme */
+    border-radius: 10px;       /* Rounded corners */
+    background-color: transparent; /* No background */
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); /* Soft glow */
+}
+
 input {
     padding: 10px;
     width: 300px;
