@@ -60,17 +60,17 @@
                 const result = await response.json();
 
                 if (result.status === "success") {
-                    statusEl.innerText = "Message sent to Splunk ✅";
+                    statusEl.innerText = "Message sent to Splunk";
                     statusEl.style.color = "limegreen";
                 } else {
-                    statusEl.innerText = result.message || "Failed to send message ❌";
+                    statusEl.innerText = result.message || "Failed to send message";
                     statusEl.style.color = "red";
                 }
 
                 clearStatusAfterDelay(statusEl);
 
             } catch (error) {
-                statusEl.innerText = "Error connecting to server ❌";
+                statusEl.innerText = "Error connecting to server";
                 statusEl.style.color = "red";
                 clearStatusAfterDelay(statusEl);
             }
