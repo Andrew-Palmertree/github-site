@@ -163,7 +163,7 @@ def test_redeploy():
         if response.status_code == 200:
             return jsonify({
                 "status": "success",
-                "message": "Deploy hook is reachable ✅"
+                "message": "Deploy hook is reachable"
             }), 200
         else:
             return jsonify({
@@ -175,7 +175,7 @@ def test_redeploy():
     except requests.exceptions.RequestException as e:
         return jsonify({
             "status": "error",
-            "message": f"Deploy hook is unreachable ❌: {str(e)}"
+            "message": f"Deploy hook is unreachable: {str(e)}"
         }), 500
 
 @app.route(DEPLOY_URL, methods=["POST"])
