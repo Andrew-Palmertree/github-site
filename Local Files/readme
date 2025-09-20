@@ -1,0 +1,4 @@
+The files in this folder (Local Files) are running on my Fedora machine, which hosts the Splunk indexer application and processes any changes on the Splunk dashboard.
+If a change is detected, the system updates the photo in the GitHub repository under static > images > splunk_logger_dashboard.png.
+The system checks for changes every 5 minutes and runs daily from 7 AM to 12 AM.
+
