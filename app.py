@@ -10,20 +10,15 @@ app = Flask(__name__)
 # Initialize better-profanity
 profanity.load_censor_words()
 
-# Environment variables
+# Environment variables for Splunk and Render Tunnel URL to local machine
 SPLUNK_HEC_URL = os.getenv('SPLUNK_HEC_URL')
 SPLUNK_HEC_TOKEN = os.getenv('SPLUNK_HEC_TOKEN')
 DEPLOY_HOOK = os.getenv('DEPLOY_HOOK')
 DEPLOY_URL = os.getenv('DEPLOY_URL')
 
-# -------------------------------
-# Helper Functions
-# -------------------------------
-
+# Functions
 def normalize_text(text):
-    """
-    Normalize text to handle tricky obfuscations like f@ck, sh!t, etc.
-    """
+# clean up weird spelling
     return clean(
         text,
         lower=True,
@@ -34,16 +29,12 @@ def normalize_text(text):
     )
 
 def contains_profanity(text):
-    """
-    Check if a message contains profanity after normalization.
-    """
+    # Check if a message contains profanity after normalization.
     normalized = normalize_text(text)
     return profanity.contains_profanity(normalized)
 
 def send_log_to_splunk(source, message):
-    """
-    Send logs to Splunk via HTTP Event Collector (HEC).
-    """
+    # Send logs to Splunk via HTTP Event Collector (HEC).
     if not SPLUNK_HEC_URL or not SPLUNK_HEC_TOKEN:
         print("Splunk HEC URL or Token not configured.")
         return
@@ -77,6 +68,7 @@ def send_log_to_splunk(source, message):
             print(f"Failed to send log to Splunk: {response.status_code} - {response.text}")
             return
 
+        # confirm ack from Splunk
         response_json = response.json()
         ack_id = response_json.get("ackId")
 
@@ -104,9 +96,7 @@ def send_log_to_splunk(source, message):
     except Exception as e:
         print(f"Error sending log to Splunk: {e}")
 
-# -------------------------------
-# Routes
-# -------------------------------
+# Routes for the URL https://github-site.onrender.com
 
 @app.route("/", methods=["GET"])
 def index():
@@ -152,50 +142,6 @@ def health():
     send_log_to_splunk("render-app", "Health check endpoint hit")
     return "OK", 200
 
-@app.route("/test-redeploy", methods=["GET"])
-def test_redeploy():
-    if not DEPLOY_HOOK:
-        return jsonify({"status": "error", "message": "DEPLOY_HOOK is not configured"}), 500
-
-    try:
-        response = requests.get(DEPLOY_HOOK, timeout=5)
-
-        if response.status_code == 200:
-            return jsonify({
-                "status": "success",
-                "message": "Deploy hook is reachable"
-            }), 200
-        else:
-            return jsonify({
-                "status": "warning",
-                "message": f"Deploy hook responded, but not OK. Status: {response.status_code}",
-                "response": response.text
-            }), 200
-
-    except requests.exceptions.RequestException as e:
-        return jsonify({
-            "status": "error",
-            "message": f"Deploy hook is unreachable: {str(e)}"
-        }), 500
-
-@app.route(DEPLOY_URL, methods=["POST"])
-def redeploy():
-    try:
-        response = requests.post(DEPLOY_HOOK)
-        if response.status_code == 200:
-            return jsonify({"status": "success", "message": "Redeployment triggered successfully"})
-        else:
-            return jsonify({
-                "status": "error",
-                "message": f"Failed to trigger redeploy. Status: {response.status_code}",
-                "response": response.text
-            }), 500
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# -------------------------------
 # Main
-# -------------------------------
-
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
