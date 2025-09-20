@@ -1,5 +1,5 @@
 # Andrew Palmertree
-# 8-23-2025
+# 8-13-2025
 # Main Python script that runs the logic on Render to determine if a certain webpage is visited.
 
 from flask import Flask, request, jsonify, render_template
