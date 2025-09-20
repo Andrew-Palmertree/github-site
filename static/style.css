@@ -1,3 +1,7 @@
+/* Andrew Palmertree
+8-23-2025
+Style file for Splunk project to enhance visuals. */
+
 body {
     margin: 0;
     padding: 0;
@@ -5,10 +9,10 @@ body {
     color: white;
     text-align: center;
     background-color: #0f172a;
-    overflow-x: hidden;
+    overflow-x: hidden; /* stop side scrolling */
 }
 
-/* Cool animated gradient background */
+/* animated gradient bg */
 .background {
     position: fixed;
     top: 0;
@@ -17,10 +21,11 @@ body {
     height: 100%;
     background: linear-gradient(270deg, #00d4ff, #7c3aed, #ff00ff);
     background-size: 600% 600%;
-    z-index: -1;
+    z-index: -1; /* keep behind content */
     animation: gradient 15s ease infinite;
 }
 
+/* move colors back and forth */
 @keyframes gradient {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -32,7 +37,7 @@ header {
     justify-content: space-between;
     padding: 20px;
     font-size: 20px;
-    flex-wrap: wrap; /* Better on smaller screens */
+    flex-wrap: wrap; /* wraps better on mobile */
 }
 
 .username {
@@ -94,7 +99,7 @@ button:hover {
     font-weight: bold;
 }
 
-/* Dashboard wrapper for responsive cropping */
+/* dashboard frame */
 .dashboard-wrapper {
     max-width: 100%;
     width: 90%;
@@ -106,19 +111,19 @@ button:hover {
     border: 2px solid #00ffea;
 }
 
-/* Make dashboard image bigger but responsive */
+/* make screenshot fit and crop */
 .dashboard-image {
     width: 150%;
     max-width: 150%;
     height: auto;
     display: block;
     object-fit: cover;
-    object-position: 20% top; /* Crops more to the right */
+    object-position: 20% top; /* show more right side */
     background-color: transparent;
     transition: all 0.3s ease-in-out;
 }
 
-/* ---------- MOBILE FIXES ---------- */
+/* ---------- MOBILE ---------- */
 @media screen and (max-width: 768px) {
     header {
         flex-direction: column;
@@ -138,9 +143,9 @@ button:hover {
     }
 
     .dashboard-image {
-        width: 100%;   /* Fit smaller screens */
+        width: 100%;   /* shrink image */
         max-width: 100%;
-        object-position: center top; /* Center focus for mobile */
+        object-position: center top; /* center for mobile */
     }
 
     input {
@@ -152,7 +157,7 @@ button:hover {
     }
 }
 
-/* For very small screens */
+/* smaller phones */
 @media screen and (max-width: 480px) {
     h1 {
         font-size: 20px;
