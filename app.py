@@ -1,3 +1,7 @@
+# Andrew Palmertree
+# 8-24-2025
+# Main Python script that runs the logic on Render to determine if a certain webpage is visited.
+
 from flask import Flask, request, jsonify, render_template
 import requests
 import os
@@ -108,6 +112,7 @@ def home():
     send_log_to_splunk("render-app", "Home page request")
     return render_template("home.html", name="Andrew Palmertree")
 
+# Sends events to Splunk
 @app.route("/log", methods=["POST"])
 def log():
     data = request.get_json()
