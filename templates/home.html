@@ -1,20 +1,29 @@
+<!-- 
+Andrew Palmertree
+8-13-2025
+Webpage layout and buttons for render app
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Splunk Logger</title>
+    <!-- Link to CSS file located in the github repo-->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <!-- Animated background -->
     <div class="background"></div>
 
     <header>
+         <!-- Header title and my name on top of webpage -->
         <h1>Splunk Logger Dashboard</h1>
         <span class="username">{{ name }}</span>
     </header>
 
-    <!-- Logging Form Section -->
+    <!-- Logging Form -->
     <div class="container">
         <img src="{{ url_for('static', filename='images/profile.jpg') }}"
              alt="Splunk Logo" class="logo">
@@ -22,12 +31,16 @@
         <h2>Send a Log to Splunk</h2>
         <input type="text" id="messageInput" placeholder="Enter your message here">
         <button onclick="sendMessage()">Send</button>
-
+        
+        <!-- Shows log status after sending -->
         <p id="statusMessage"></p>
     </div>
 
-    <!-- Splunk Dashboard Image Section (separate) -->
-<!-- Add Splunk Dashboard Image Here -->
+    <!-- 
+    Splunk dashboard preview 
+    The Fedora Linux box checks it's local Splunk dashboard every 5 minutes.
+    If there is a change, it will update splunk_logger_dashboard.png
+    -->
     <h3>Splunk Dashboard</h3>
     <div class="dashboard-wrapper">
         <img src="{{ url_for('static', filename='images/splunk_logger_dashboard.png') }}" 
@@ -36,10 +49,12 @@
     </div>
 
     <script>
+        // Send log message to backend
         async function sendMessage() {
             const message = document.getElementById("messageInput").value;
             const statusEl = document.getElementById("statusMessage");
 
+            // Check if the message is empty
             if (!message) {
                 statusEl.innerText = "Please enter a message.";
                 statusEl.style.color = "red";
@@ -48,6 +63,7 @@
             }
 
             try {
+                 // POST request to backend
                 const response = await fetch("/log", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -59,6 +75,7 @@
 
                 const result = await response.json();
 
+                // Update status message based on response
                 if (result.status === "success") {
                     statusEl.innerText = "Message sent to Splunk";
                     statusEl.style.color = "limegreen";
@@ -70,12 +87,13 @@
                 clearStatusAfterDelay(statusEl);
 
             } catch (error) {
+                // Handle connection errors
                 statusEl.innerText = "Error connecting to server";
                 statusEl.style.color = "red";
                 clearStatusAfterDelay(statusEl);
             }
         }
-
+        // Clears the status text after a delay
         function clearStatusAfterDelay(element) {
             setTimeout(() => {
                 element.innerText = "";
